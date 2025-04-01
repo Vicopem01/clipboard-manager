@@ -1,0 +1,32 @@
+{
+  "name": "clipboard-manager",
+  "version": "1.0.0",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "build": {
+    "appId": "com.vicopem.clipboard",
+    "mac": {
+      "category": "public.app-category.utilities",
+      "icon": "src/icon.png",
+      "darkModeSupport": true
+    },
+    "extraMetadata": {
+      "main": "src/main.js"
+    }
+  },
+  "author": "https://github.com/Vicopem01",
+  "license": "ISC",
+  "description": "A simple clipboard history manager for macOS",
+  "dependencies": {
+    "electron-store": "^10.0.0"
+  },
+  "devDependencies": {
+    "electron": "^33.2.1",
+    "electron-builder": "^25.1.8"
+  }
+}

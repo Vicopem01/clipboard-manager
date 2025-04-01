@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Clipboard Manager</title>
+    <style>
+      body {
+        background: transparent;
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        color: #333;
+        overflow: hidden;
+      }
+      #root {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        width: 320px;
+        max-height: 450px;
+        border-radius: 10px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border: 1px solid rgba(0, 0, 0, 0.1);
+      }
+      .header {
+        padding: 10px 16px;
+        background: linear-gradient(to bottom, #f9f9f9, #f3f3f3);
+        border-bottom: 1px solid #eaeaea;
+        border-radius: 10px 10px 0 0;
+        -webkit-app-region: drag;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .header h3 {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 500;
+        color: #333;
+      }
+      .content {
+        padding: 8px;
+        max-height: 400px;
+        overflow-y: auto;
+        flex: 1;
+      }
+      #clips {
+        margin: 0;
+        padding: 0;
+      }
+      .clip-item {
+        padding: 8px 12px;
+        margin: 4px 0;
+        border-radius: 6px;
+        background: #f5f5f5;
+        cursor: pointer;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        border: 1px solid #e0e0e0;
+        position: relative;
+        font-size: 12px;
+        transition: background 0.1s ease;
+      }
+      .clip-item:hover {
+        background: #e8e8e8;
+      }
+      .clip-item.active {
+        background: #dbeafe;
+        border-color: #bfdbfe;
+      }
+      .footer {
+        padding: 6px 16px;
+        font-size: 11px;
+        color: #999;
+        text-align: center;
+        border-top: 1px solid #eaeaea;
+        background: #f9f9f9;
+      }
+      .shortcut {
+        display: inline-block;
+        padding: 2px 4px;
+        background: #f1f1f1;
+        border-radius: 3px;
+        border: 1px solid #ddd;
+        font-family: monospace;
+        margin: 0 2px;
+      }
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 8px;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 8px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <div class="header">
+        <h3>Clipboard History</h3>
+      </div>
+      <div class="content">
+        <div id="clips"></div>
+      </div>
+      <div class="footer">
+        Press <span class="shortcut">⌘⇧V</span> to toggle | Click item to copy
+      </div>
+    </div>
+    <script src="renderer.js"></script>
+  </body>
+</html>

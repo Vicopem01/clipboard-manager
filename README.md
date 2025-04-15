@@ -58,7 +58,6 @@ File Structure
 - `src/preload.js`: Preload script for secure communication between the main and renderer processes.
 - `src/modal.html`: HTML structure for the clipboard history modal.
 - `src/modal.css`: Styles for the clipboard history modal.
-resources/iconTemplate.js: Generates the tray icon.
 
 ## Scripts
 - Start the app: `npm start`

@@ -3,3 +3,12 @@
 
 # build
 /dist
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Linux
+.directory

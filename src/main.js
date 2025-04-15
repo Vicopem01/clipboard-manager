@@ -1,5 +1,15 @@
 // main.js
-const { app, Menu, clipboard, nativeImage, Tray, globalShortcut, BrowserWindow, screen, ipcMain } = require("electron");
+const {
+  app,
+  Menu,
+  clipboard,
+  nativeImage,
+  Tray,
+  globalShortcut,
+  BrowserWindow,
+  screen,
+  ipcMain,
+} = require("electron");
 const path = require("path");
 
 let tray = null;
@@ -25,14 +35,14 @@ let modalWindow = null; // Variable for the modal window
     // We no longer call initializeApp here. It will be called by app.whenReady
     // If the app is already ready, update the tray menu if it exists
     if (app.isReady()) {
-        if(trayControls) {
-            console.log("App was already ready, updating tray menu.");
-            trayControls.updateTrayMenu();
-        }
-        // Ensure modal is also created if app was ready fast
-        if (!modalWindow) {
-            createModalWindow();
-        }
+      if (trayControls) {
+        console.log("App was already ready, updating tray menu.");
+        trayControls.updateTrayMenu();
+      }
+      // Ensure modal is also created if app was ready fast
+      if (!modalWindow) {
+        createModalWindow();
+      }
     }
   } catch (error) {
     console.error("Failed to initialize electron-store:", error);
@@ -48,35 +58,35 @@ let clipboardHistory = [];
 
 // Function to create the modal window
 function createModalWindow() {
-    if (modalWindow) return; // Avoid creating multiple windows
+  if (modalWindow) return; // Avoid creating multiple windows
 
-    modalWindow = new BrowserWindow({
-        width: 300, // Adjust width as needed
-        height: 400, // Adjust height as needed
-        show: false,
-        frame: false,
-        resizable: false,
-        alwaysOnTop: true,
-        skipTaskbar: true,
-        webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
-            contextIsolation: true,
-            nodeIntegration: false
-        }
-    });
+  modalWindow = new BrowserWindow({
+    width: 300, // Adjust width as needed
+    height: 400, // Adjust height as needed
+    show: false,
+    frame: false,
+    resizable: false,
+    alwaysOnTop: true,
+    skipTaskbar: true,
+    webPreferences: {
+      preload: path.join(__dirname, "preload.js"),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
+  });
 
-    modalWindow.loadFile(path.join(__dirname, 'modal.html'));
+  modalWindow.loadFile(path.join(__dirname, "modal.html"));
 
-    // Hide the window when it loses focus (optional, handled in renderer too)
-    // modalWindow.on('blur', () => {
-    //     if (modalWindow && modalWindow.isVisible()) {
-    //         modalWindow.hide();
-    //     }
-    // });
+  // Hide the window when it loses focus (optional, handled in renderer too)
+  // modalWindow.on('blur', () => {
+  //     if (modalWindow && modalWindow.isVisible()) {
+  //         modalWindow.hide();
+  //     }
+  // });
 
-    modalWindow.on('closed', () => {
-        modalWindow = null; // Dereference the window object
-    });
+  modalWindow.on("closed", () => {
+    modalWindow = null; // Dereference the window object
+  });
 }
 
 function createTray() {
@@ -297,14 +307,10 @@ function monitorClipboard() {
           // A more robust method might involve hashing image data.
           const currentTimestamp = Date.now(); // Simple change detection
           if (currentTimestamp !== lastContent.imageTimestamp) {
-            console.log("Clipboard Change: New Image Detected");
             const fullImageDataUrl = currentImage.toDataURL();
             const thumbnail = currentImage.resize({ width: 18, height: 18 });
             const thumbnailDataUrl = thumbnail.toDataURL();
 
-            console.log(
-              `Generated image data. Full URL length: ${fullImageDataUrl.length}, Thumbnail URL length: ${thumbnailDataUrl.length}`
-            );
             newItem = {
               type: "image",
               dataUrl: fullImageDataUrl,
@@ -410,17 +416,17 @@ function initializeApp() {
 
   // Register the global shortcut AFTER tray and modal are potentially created
   try {
-    const ret = globalShortcut.register('Command+Shift+V', () => {
-      console.log('Command+Shift+V is pressed');
+    const ret = globalShortcut.register("Command+Shift+V", () => {
+      console.log("Command+Shift+V is pressed");
 
       if (!modalWindow) {
-          console.error("Modal window not initialized!");
-          return;
+        console.error("Modal window not initialized!");
+        return;
       }
 
       if (modalWindow.isVisible()) {
-          modalWindow.hide(); // Toggle visibility
-          return;
+        modalWindow.hide(); // Toggle visibility
+        return;
       }
 
       // Get cursor position
@@ -439,7 +445,10 @@ function initializeApp() {
       if (modalX + modalBounds.width > displayBounds.x + displayBounds.width) {
         modalX = displayBounds.x + displayBounds.width - modalBounds.width;
       }
-      if (modalY + modalBounds.height > displayBounds.y + displayBounds.height) {
+      if (
+        modalY + modalBounds.height >
+        displayBounds.y + displayBounds.height
+      ) {
         modalY = displayBounds.y + displayBounds.height - modalBounds.height;
       }
       if (modalX < displayBounds.x) {
@@ -450,23 +459,26 @@ function initializeApp() {
       }
 
       // Send the current history to the modal BEFORE showing
-      modalWindow.webContents.send('show-history', clipboardHistory);
+      modalWindow.webContents.send("show-history", clipboardHistory);
 
       // Set position and show
-      modalWindow.setBounds({ x: Math.round(modalX), y: Math.round(modalY), width: modalBounds.width, height: modalBounds.height });
+      modalWindow.setBounds({
+        x: Math.round(modalX),
+        y: Math.round(modalY),
+        width: modalBounds.width,
+        height: modalBounds.height,
+      });
       modalWindow.show();
       modalWindow.focus(); // Focus the window
-
     });
 
     if (!ret) {
-      console.error('Failed to register global shortcut Command+Shift+V');
+      console.error("Failed to register global shortcut Command+Shift+V");
     } else {
-      console.log('Global shortcut Command+Shift+V registered successfully.');
+      console.log("Global shortcut Command+Shift+V registered successfully.");
     }
-
   } catch (error) {
-      console.error('Error registering global shortcut:', error);
+    console.error("Error registering global shortcut:", error);
   }
 }
 
@@ -477,7 +489,7 @@ app.dock?.hide();
 app.whenReady().then(() => {
   console.log("App is ready, creating modal and initializing app.");
   createModalWindow(); // Create the modal window first
-  initializeApp();     // Then initialize tray, monitoring, shortcuts
+  initializeApp(); // Then initialize tray, monitoring, shortcuts
 });
 
 app.on("window-all-closed", () => {
@@ -489,63 +501,69 @@ app.on("window-all-closed", () => {
 app.on("will-quit", () => {
   // Unregister all shortcuts.
   globalShortcut.unregisterAll();
-  console.log('Global shortcuts unregistered.');
+  console.log("Global shortcuts unregistered.");
 
   // Destroy modal window if it exists
-    if (modalWindow) {
-        modalWindow.close();
-        modalWindow = null;
-    }
+  if (modalWindow) {
+    modalWindow.close();
+    modalWindow = null;
+  }
 
   // Clean up
 });
 
 // IPC Handlers
-ipcMain.on('item-selected', (event, item) => {
-    console.log("Main process received item selection:", item);
-    if (!item) return;
+ipcMain.on("item-selected", (event, item) => {
+  console.log("Main process received item selection:", item);
+  if (!item) return;
 
-    if (item.type === 'text') {
-        clipboard.writeText(item.text);
-        console.log("Text written to clipboard.");
-    } else if (item.type === 'image' && item.dataUrl) {
-        try {
-            const image = nativeImage.createFromDataURL(item.dataUrl);
-            if (!image.isEmpty()) {
-                clipboard.writeImage(image);
-                console.log("Image written to clipboard.");
-            } else {
-                console.error("Failed to create nativeImage from dataUrl for writing to clipboard.");
-            }
-        } catch (e) {
-            console.error("Error writing image to clipboard:", e);
-        }
+  if (item.type === "text") {
+    clipboard.writeText(item.text);
+    console.log("Text written to clipboard.");
+  } else if (item.type === "image" && item.dataUrl) {
+    try {
+      const image = nativeImage.createFromDataURL(item.dataUrl);
+      if (!image.isEmpty()) {
+        clipboard.writeImage(image);
+        console.log("Image written to clipboard.");
+      } else {
+        console.error(
+          "Failed to create nativeImage from dataUrl for writing to clipboard."
+        );
+      }
+    } catch (e) {
+      console.error("Error writing image to clipboard:", e);
     }
+  }
 
-    // Move selected item to top (optional but good UX)
-    const selectedIndex = clipboardHistory.findIndex(h => 
-        h.type === item.type && 
-        (h.type === 'text' ? h.text === item.text : h.thumbnailDataUrl === item.thumbnailDataUrl)
-    );
-    if (selectedIndex > 0) {
-        const [movedItem] = clipboardHistory.splice(selectedIndex, 1);
-        clipboardHistory.unshift(movedItem);
-        if (store) {
-          store.set("history", clipboardHistory);
-        }
-        if (trayControls) { // Update tray menu as well
-            trayControls.updateTrayMenu();
-        }
+  // Move selected item to top (optional but good UX)
+  const selectedIndex = clipboardHistory.findIndex(
+    (h) =>
+      h.type === item.type &&
+      (h.type === "text"
+        ? h.text === item.text
+        : h.thumbnailDataUrl === item.thumbnailDataUrl)
+  );
+  if (selectedIndex > 0) {
+    const [movedItem] = clipboardHistory.splice(selectedIndex, 1);
+    clipboardHistory.unshift(movedItem);
+    if (store) {
+      store.set("history", clipboardHistory);
     }
+    if (trayControls) {
+      // Update tray menu as well
+      trayControls.updateTrayMenu();
+    }
+  }
 
-    if (modalWindow) {
-        modalWindow.hide();
-    }
+  if (modalWindow) {
+    modalWindow.hide();
+  }
 });
 
-ipcMain.on('close-modal', () => {
-    console.log("Main process received close request.");
-    if (modalWindow) {
-        modalWindow.hide();
-    }
+ipcMain.on("close-modal", () => {
+  console.log("Main process received close request.");
+  if (modalWindow) {
+    modalWindow.hide();
+  }
 });

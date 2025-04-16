@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer, shell } = require("electron");
+const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("electronAPI", {
   // Renderer -> Main
@@ -8,8 +8,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   notifyDragEnd: (success) => ipcRenderer.send("drag-ended", success),
   openExternalLink: (url) => ipcRenderer.send("open-external-link", url),
   clearHistory: () => ipcRenderer.send("clear-history"),
-  startWindowDrag: (x, y) => ipcRenderer.send("start-window-drag", { x, y }),
-  endWindowDrag: () => ipcRenderer.send("end-window-drag"),
 
   // Main -> Renderer
   onShowHistory: (callback) =>

@@ -9,6 +9,7 @@ const {
   BrowserWindow,
   screen,
   ipcMain,
+  shell,
 } = require("electron");
 const path = require("path");
 
@@ -36,7 +37,7 @@ let modalWindow = null; // Variable for the modal window
     // If the app is already ready, update the tray menu if it exists
     if (app.isReady()) {
       if (trayControls) {
-        console.log("App was already ready, updating tray menu.");
+        // console.log("App was already ready, updating tray menu.");
         trayControls.updateTrayMenu();
       }
       // Ensure modal is also created if app was ready fast
@@ -61,8 +62,8 @@ function createModalWindow() {
   if (modalWindow) return; // Avoid creating multiple windows
 
   modalWindow = new BrowserWindow({
-    width: 300, // Adjust width as needed
-    height: 400, // Adjust height as needed
+    width: 280, // Slightly smaller width
+    height: 365, // Adjusted height to accommodate footer
     show: false,
     frame: false,
     resizable: false,
@@ -73,16 +74,45 @@ function createModalWindow() {
       contextIsolation: true,
       nodeIntegration: false,
     },
+    // Set transparent background to allow custom rounded corners
+    transparent: true,
+    // Disable window shadow to prevent visual artifacts
+    hasShadow: false,
+    // Disable auto-hiding scrollbars to prevent layout shifts
+    autoHideMenuBar: true,
+    // Use content size for accurate sizing
+    useContentSize: true,
+    // Ensure the full window is used
+    fullscreenable: false,
+    maximizable: false,
+    // Make the window movable (draggable)
+    movable: true,
   });
+  
+  // Enable BrowserWindow dragging for frameless window
+  modalWindow.setMovable(true);
 
+  // Set window to be movable but stay on top
+  modalWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  
+  // Enable drag events from modal to other applications
+  modalWindow.setContentProtection(false);
+  
+  // Add custom shadow using CSS in the renderer
+  
   modalWindow.loadFile(path.join(__dirname, "modal.html"));
 
-  // Hide the window when it loses focus (optional, handled in renderer too)
-  // modalWindow.on('blur', () => {
-  //     if (modalWindow && modalWindow.isVisible()) {
-  //         modalWindow.hide();
-  //     }
-  // });
+  // Handle blur event in the main process too, respecting drag state
+  modalWindow.on('blur', () => {
+    if (!dragInProgress && modalWindow && modalWindow.isVisible()) {
+      // Add a short delay to allow for drag operations to register
+      setTimeout(() => {
+        if (!dragInProgress) {
+          modalWindow.hide();
+        }
+      }, 150);
+    }
+  });
 
   modalWindow.on("closed", () => {
     modalWindow = null; // Dereference the window object
@@ -121,145 +151,40 @@ function createTray() {
     }
 
     tray.setToolTip("Clipboard Manager");
-
-    // Update the tray context menu with clipboard history
-    function updateTrayMenu() {
-      console.log(
-        "Updating Tray Menu. History items:",
-        clipboardHistory.length
-      );
-      const historyItems = clipboardHistory.map((item, index) => {
-        let menuItem = {};
-
-        if (item.type === "text") {
-          // Truncate text if too long
-          const displayText =
-            item.text.length > 25
-              ? item.text.substring(0, 25) + "..."
-              : item.text;
-
-          menuItem = {
-            label: displayText,
-            click: () => {
-              // Copy text back to clipboard when clicked
-              clipboard.writeText(item.text);
-              // Move this item to the top of the history
-              if (index > 0) {
-                const movedItem = clipboardHistory.splice(index, 1)[0];
-                clipboardHistory.unshift(movedItem);
-                updateTrayMenu();
-                if (store) {
-                  store.set("history", clipboardHistory);
-                }
-              }
-            },
-          };
-        } else if (item.type === "image" && item.thumbnailDataUrl) {
-          try {
-            console.log(
-              `[Menu Item ${index}] Creating image menu item. Thumbnail URL length: ${item.thumbnailDataUrl.length}`
-            );
-            const thumbnailIcon = nativeImage.createFromDataURL(
-              item.thumbnailDataUrl
-            );
-            if (thumbnailIcon.isEmpty()) {
-              console.error(
-                `[Menu Item ${index}] Failed to create nativeImage from thumbnailDataUrl`
-              );
-              menuItem = { label: "[Image Load Error]", enabled: false };
-            } else {
-              console.log(
-                `[Menu Item ${index}] Image thumbnail loaded successfully. Size:`,
-                thumbnailIcon.getSize()
-              );
-              menuItem = {
-                label: "[Image]", // Or show dimensions, timestamp, etc.
-                icon: thumbnailIcon,
-                click: () => {
-                  console.log(
-                    `[Menu Item ${index}] Image clicked. Restoring full image.`
-                  );
-                  // Copy the full image back to clipboard
-                  try {
-                    const fullImage = nativeImage.createFromDataURL(
-                      item.dataUrl
-                    );
-                    if (fullImage.isEmpty()) {
-                      console.error(
-                        `[Menu Item ${index}] Failed to create nativeImage from full dataUrl for restore.`
-                      );
-                    } else {
-                      clipboard.writeImage(fullImage);
-                      console.log(
-                        `[Menu Item ${index}] Full image written to clipboard.`
-                      );
-                    }
-                  } catch (restoreError) {
-                    console.error(
-                      `[Menu Item ${index}] Error restoring full image:`,
-                      restoreError
-                    );
-                  }
-                  // Move this item to the top
-                  if (index > 0) {
-                    const movedItem = clipboardHistory.splice(index, 1)[0];
-                    clipboardHistory.unshift(movedItem);
-                    updateTrayMenu();
-                    if (store) {
-                      store.set("history", clipboardHistory);
-                    }
-                  }
-                },
-              };
-            }
-          } catch (e) {
-            console.error(
-              `[Menu Item ${index}] Error processing image menu item:`,
-              e
-            );
-            // Fallback for invalid image data
-            menuItem = { label: "[Image Process Error]", enabled: false };
+    
+    // Instead of setting a context menu, handle click events
+    tray.on('click', (event, bounds) => {
+      showModalAtPosition(bounds.x, bounds.y);
+    });
+    
+    // Create right-click menu for additional options
+    const contextMenu = Menu.buildFromTemplate([
+      {
+        label: "Clear History",
+        click: () => {
+          clipboardHistory = [];
+          if (store) {
+            store.set("history", []);
           }
-        } else {
-          // Fallback for unknown item type or missing data
-          menuItem = { label: "[Unknown Item]", enabled: false };
-        }
-
-        return menuItem;
-      });
-
-      const contextMenu = Menu.buildFromTemplate([
-        {
-          label: "History",
-          enabled: false,
         },
-        ...historyItems,
-        { type: "separator" },
-        {
-          label: "Clear History",
-          click: () => {
-            clipboardHistory = [];
-            if (store) {
-              store.set("history", []);
-            }
-            updateTrayMenu();
-          },
-        },
-        {
-          label: "Quit",
-          accelerator: "CommandOrControl+Q",
-          click: () => app.quit(),
-        },
-      ]);
-
-      tray.setContextMenu(contextMenu);
-    }
-
-    // Initial update of the menu
-    updateTrayMenu();
+      },
+      { type: "separator" },
+      {
+        label: "Quit",
+        accelerator: "CommandOrControl+Q",
+        click: () => app.quit(),
+      },
+    ]);
+    
+    // Set the right-click menu
+    tray.on('right-click', () => {
+      tray.popUpContextMenu(contextMenu);
+    });
 
     return {
-      updateTrayMenu,
+      updateTrayMenu: () => {
+        // No longer needed but kept for API compatibility
+      },
     };
   } catch (error) {
     console.error("Error creating tray:", error);
@@ -267,6 +192,58 @@ function createTray() {
       updateTrayMenu: () => {}, // Empty function as fallback
     };
   }
+}
+
+// Function to show modal at a specific position (reused for shortcut and tray click)
+function showModalAtPosition(x, y) {
+  if (!modalWindow) {
+    console.error("Modal window not initialized!");
+    return;
+  }
+
+  if (modalWindow.isVisible()) {
+    modalWindow.hide();
+    return;
+  }
+
+  const modalBounds = modalWindow.getBounds();
+
+  // Position the modal below the tray icon for tray clicks
+  let modalX = x - (modalBounds.width / 2);
+  let modalY = y;
+
+  // Ensure the modal appears fully on the screen
+  const currentDisplay = screen.getDisplayNearestPoint({ x, y });
+  const displayBounds = currentDisplay.workArea;
+
+  if (modalX + modalBounds.width > displayBounds.x + displayBounds.width) {
+    modalX = displayBounds.x + displayBounds.width - modalBounds.width;
+  }
+  if (
+    modalY + modalBounds.height >
+    displayBounds.y + displayBounds.height
+  ) {
+    modalY = displayBounds.y + displayBounds.height - modalBounds.height;
+  }
+  if (modalX < displayBounds.x) {
+    modalX = displayBounds.x;
+  }
+  if (modalY < displayBounds.y) {
+    modalY = displayBounds.y;
+  }
+
+  // Send the current history to the modal BEFORE showing
+  modalWindow.webContents.send("show-history", clipboardHistory);
+
+  // Set position and show
+  modalWindow.setBounds({
+    x: Math.round(modalX),
+    y: Math.round(modalY),
+    width: modalBounds.width,
+    height: modalBounds.height,
+  });
+  modalWindow.show();
+  modalWindow.focus(); // Focus the window
 }
 
 // Monitor clipboard for changes
@@ -296,13 +273,13 @@ function monitorClipboard() {
 
       // Prioritize Image check
       if (availableFormats.some((f) => f.startsWith("image/"))) {
-        console.log("Image format detected on clipboard.");
+        // console.log("Image format detected on clipboard.");
         const currentImage = clipboard.readImage();
         if (!currentImage.isEmpty()) {
-          console.log(
-            "Read non-empty image from clipboard. Size:",
-            currentImage.getSize()
-          );
+          // console.log(
+          //   "Read non-empty image from clipboard. Size:",
+          //   currentImage.getSize()
+          // );
           // Compare images is tricky. Let's use a timestamp hack for now.
           // A more robust method might involve hashing image data.
           const currentTimestamp = Date.now(); // Simple change detection
@@ -320,20 +297,20 @@ function monitorClipboard() {
             lastContent.text = null; // Reset text if image changed
             contentChanged = true;
           } else {
-            console.log(
-              "Image timestamp matches last known image. No change detected."
-            );
+            // console.log(
+            //   "Image timestamp matches last known image. No change detected."
+            // );
             currentContent.imageTimestamp = lastContent.imageTimestamp;
           }
         } else {
-          console.log("Image format detected, but readImage() returned empty.");
+          // console.log("Image format detected, but readImage() returned empty.");
         }
       } else {
         // If no image, check text
         const currentText = clipboard.readText();
         currentContent.text = currentText;
         if (currentText && currentText !== lastContent.text) {
-          console.log("Clipboard Change: New Text Detected");
+          // console.log("Clipboard Change: New Text Detected");
           newItem = { type: "text", text: currentText };
           lastContent.text = currentText;
           lastContent.imageTimestamp = null; // Reset image if text changed
@@ -361,40 +338,35 @@ function monitorClipboard() {
         }
 
         if (existingIndex !== -1) {
-          console.log("Clipboard Change: Removing existing duplicate.");
+          // console.log("Clipboard Change: Removing existing duplicate.");
           clipboardHistory.splice(existingIndex, 1);
         }
 
         // Add to beginning of array
         clipboardHistory.unshift(newItem);
-        console.log(
-          `Clipboard Change: Added new ${newItem.type} item to history.`
-        );
+        // console.log(
+        //   `Clipboard Change: Added new ${newItem.type} item to history.`
+        // );
 
         // Limit history size
         if (clipboardHistory.length > MAX_CLIPBOARD_ITEMS) {
           clipboardHistory = clipboardHistory.slice(0, MAX_CLIPBOARD_ITEMS);
-          console.log(
-            `Clipboard Change: History trimmed to ${MAX_CLIPBOARD_ITEMS} items.`
-          );
+          // console.log(
+          //   `Clipboard Change: History trimmed to ${MAX_CLIPBOARD_ITEMS} items.`
+          // );
         }
 
         // Save to store
-        console.log("Saving history to store:", clipboardHistory);
+        // console.log("Saving history to store:", clipboardHistory);
         if (store) {
           store.set("history", clipboardHistory);
-          console.log("Clipboard Change: History saved to store.");
+          // console.log("Clipboard Change: History saved to store.");
         }
 
-        // Update the tray menu to show the new clipboard content
-        if (trayControls) {
-          trayControls.updateTrayMenu();
-        }
         // Send updated history to modal if it's visible
-        // Note: We only send when the shortcut is pressed now
-        // if (modalWindow && modalWindow.isVisible()) {
-        //     modalWindow.webContents.send('show-history', clipboardHistory);
-        // }
+        if (modalWindow && modalWindow.isVisible()) {
+            modalWindow.webContents.send('show-history', clipboardHistory);
+        }
       }
     } catch (error) {
       // Log errors related to reading clipboard frequently
@@ -411,71 +383,20 @@ function initializeApp() {
   trayControls = createTray();
   monitorClipboard();
 
-  // Create modal window (moved here, happens after tray)
-  // createModalWindow(); // Moved to app.whenReady
-
   // Register the global shortcut AFTER tray and modal are potentially created
   try {
-    const ret = globalShortcut.register("Command+Shift+V", () => {
-      console.log("Command+Shift+V is pressed");
+    const ret = globalShortcut.register("Control+V", () => {
+      // console.log("Control+V is pressed");
 
-      if (!modalWindow) {
-        console.error("Modal window not initialized!");
-        return;
-      }
-
-      if (modalWindow.isVisible()) {
-        modalWindow.hide(); // Toggle visibility
-        return;
-      }
-
-      // Get cursor position
+      // Get cursor position and show modal at that position
       const { x, y } = screen.getCursorScreenPoint();
-      const modalBounds = modalWindow.getBounds();
-
-      // Basic positioning: Place top-left of modal near cursor
-      // Add small offsets so cursor isn't exactly over the corner
-      let modalX = x + 10;
-      let modalY = y + 10;
-
-      // Ensure the modal appears fully on the screen
-      const currentDisplay = screen.getDisplayNearestPoint({ x, y });
-      const displayBounds = currentDisplay.workArea;
-
-      if (modalX + modalBounds.width > displayBounds.x + displayBounds.width) {
-        modalX = displayBounds.x + displayBounds.width - modalBounds.width;
-      }
-      if (
-        modalY + modalBounds.height >
-        displayBounds.y + displayBounds.height
-      ) {
-        modalY = displayBounds.y + displayBounds.height - modalBounds.height;
-      }
-      if (modalX < displayBounds.x) {
-        modalX = displayBounds.x;
-      }
-      if (modalY < displayBounds.y) {
-        modalY = displayBounds.y;
-      }
-
-      // Send the current history to the modal BEFORE showing
-      modalWindow.webContents.send("show-history", clipboardHistory);
-
-      // Set position and show
-      modalWindow.setBounds({
-        x: Math.round(modalX),
-        y: Math.round(modalY),
-        width: modalBounds.width,
-        height: modalBounds.height,
-      });
-      modalWindow.show();
-      modalWindow.focus(); // Focus the window
+      showModalAtPosition(x, y);
     });
 
     if (!ret) {
-      console.error("Failed to register global shortcut Command+Shift+V");
+      console.error("Failed to register global shortcut Control+V");
     } else {
-      console.log("Global shortcut Command+Shift+V registered successfully.");
+      console.log("Global shortcut Control+V registered successfully.");
     }
   } catch (error) {
     console.error("Error registering global shortcut:", error);
@@ -514,18 +435,18 @@ app.on("will-quit", () => {
 
 // IPC Handlers
 ipcMain.on("item-selected", (event, item) => {
-  console.log("Main process received item selection:", item);
+  // console.log("Main process received item selection:", item);
   if (!item) return;
 
   if (item.type === "text") {
     clipboard.writeText(item.text);
-    console.log("Text written to clipboard.");
+    // console.log("Text written to clipboard.");
   } else if (item.type === "image" && item.dataUrl) {
     try {
       const image = nativeImage.createFromDataURL(item.dataUrl);
       if (!image.isEmpty()) {
         clipboard.writeImage(image);
-        console.log("Image written to clipboard.");
+        // console.log("Image written to clipboard.");
       } else {
         console.error(
           "Failed to create nativeImage from dataUrl for writing to clipboard."
@@ -550,10 +471,6 @@ ipcMain.on("item-selected", (event, item) => {
     if (store) {
       store.set("history", clipboardHistory);
     }
-    if (trayControls) {
-      // Update tray menu as well
-      trayControls.updateTrayMenu();
-    }
   }
 
   if (modalWindow) {
@@ -562,8 +479,61 @@ ipcMain.on("item-selected", (event, item) => {
 });
 
 ipcMain.on("close-modal", () => {
-  console.log("Main process received close request.");
+  // console.log("Main process received close request.");
   if (modalWindow) {
     modalWindow.hide();
+  }
+});
+
+// Handle drag operation notifications from renderer
+let dragInProgress = false;
+
+ipcMain.on("drag-started", () => {
+  // console.log("Main process received drag-started event");
+  dragInProgress = true;
+  
+  // Keep the window visible during drag operations
+  if (modalWindow) {
+    // Ensure the window stays visible
+    modalWindow.setAlwaysOnTop(true, "floating", 1);
+  }
+});
+
+ipcMain.on("drag-ended", (event, dropSuccessful) => {
+  // console.log("Main process received drag-ended event", dropSuccessful ? "with successful drop" : "");
+  dragInProgress = false;
+  
+  // Reset window settings after drag
+  if (modalWindow) {
+    modalWindow.setAlwaysOnTop(true);
+    
+    // If drop was successful, hide the modal
+    if (dropSuccessful) {
+      modalWindow.hide();
+    }
+  }
+});
+
+// Handle opening external links
+ipcMain.on("open-external-link", (event, url) => {
+  // console.log("Opening external link:", url);
+  shell.openExternal(url).catch(err => {
+    console.error("Failed to open external link:", err);
+  });
+});
+
+// Handle clearing clipboard history
+ipcMain.on("clear-history", (event) => {
+  // Clear the history array
+  clipboardHistory = [];
+  
+  // Update the store
+  if (store) {
+    store.set("history", []);
+  }
+  
+  // Update the modal if it's visible
+  if (modalWindow && modalWindow.isVisible()) {
+    modalWindow.webContents.send("show-history", clipboardHistory);
   }
 });

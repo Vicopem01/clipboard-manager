@@ -6,7 +6,7 @@ A lightweight clipboard history manager for macOS that lives in your menu bar. T
 
 - 📋 **Clipboard History**: Track text and image clipboard items.
 - 🔍 **Quick Access**: Access clipboard history from the menu bar.
-- ⌨️ **Keyboard Shortcut**: Use `⌘⇧V` (Command+Shift+V) to toggle the clipboard history window.
+- ⌨️ **Keyboard Shortcut**: Use `⌃V` (Control+V) to toggle the clipboard history window.
 - 🚀 **Lightweight**: Minimal resource usage and unobtrusive design.
 - 💾 **Persistent History**: Clipboard history is saved between app restarts.
 - 🔄 **Keyboard Navigation**: Use arrow keys to navigate and `Enter` to select an item.
@@ -30,42 +30,48 @@ A lightweight clipboard history manager for macOS that lives in your menu bar. T
    ```bash
    git clone https://github.com/Vicopem01/clipboard-manager.git
    cd clipboard-manager
-    ```
+   ```
 2. Install dependencies:
-    ```javascript
-    npm install
-    ```
+
+   ```javascript
+   npm install
+   ```
 
 3. Start the application:
-    ```javascript
-    npm start
-    ```
+   ```javascript
+   npm start
+   ```
 4. Build the application (optional):
-    ```javascript
-    npm run build
-    ```
+   ```javascript
+   npm run build
+   ```
 
 ## Usage
+
 1. Menu Bar Access: Click the clipboard icon in the menu bar to view your clipboard history.
-2. Keyboard Shortcut: Press ⌘⇧V to toggle the clipboard history modal.
+2. Keyboard Shortcut: Press ⌃V (Control+V) to toggle the clipboard history modal.
 3. Copy Items: Click any item in the history to copy it back to the clipboard.
 4. Keyboard Navigation: Use arrow keys to navigate the history and Enter to select an item.
 
 ## Development
+
 File Structure
- - `src/main.js`: Main process logic, including tray creation, clipboard monitoring, and modal management.
- - `src/renderer.js`: Renderer process logic for the clipboard history modal.
+
+- `src/main.js`: Main process logic, including tray creation, clipboard monitoring, and modal management.
+- `src/renderer.js`: Renderer process logic for the clipboard history modal.
 - `src/preload.js`: Preload script for secure communication between the main and renderer processes.
 - `src/modal.html`: HTML structure for the clipboard history modal.
 - `src/modal.css`: Styles for the clipboard history modal.
 
 ## Scripts
+
 - Start the app: `npm start`
 - Build the app: `npm run build`
 
 ## Contributing
+
 Contributions are welcome! Feel free to open issues or submit pull requests to improve the project.
 
-
 ## Credits
+
 Created by [Vicopem01](https://github.com/Vicopem01).

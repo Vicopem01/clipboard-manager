@@ -10,63 +10,38 @@ A lightweight clipboard history manager for macOS that lives in your menu bar. T
 - 🚀 **Lightweight**: Minimal resource usage and unobtrusive design.
 - 💾 **Persistent History**: Clipboard history is saved between app restarts.
 - 🔄 **Keyboard Navigation**: Use arrow keys to navigate and `Enter` to select an item.
+- ✨ **Drag and Drop**: Drag items directly from the clipboard history to any application.
 
 ## How It Works
 
 - The app monitors clipboard changes and stores text and image items in a history list.
 - The menu bar tray icon provides access to the clipboard history and additional options.
-- A modal window displays the clipboard history, allowing you to select and copy items back to the clipboard.
+- A modal window displays the clipboard history, allowing you to select, copy, or drag items directly where needed.
 
 ## Installation
 
+### Direct Download (Recommended)
+
+1. Download the latest version from the [official download link](https://drive.google.com/file/d/140ZFcxvXVWBRR682b3GgXux_RimoIuU6/view?usp=drive_link)
+2. Open the downloaded .dmg file
+3. Drag Clipboard Manager to your Applications folder
+4. Open Clipboard Manager from your Applications folder
+5. (Optional) Set Clipboard Manager to start at login in System Preferences
+
 ### Requirements
 
-- **Node.js**: Version 14 or higher.
-- **npm**: Installed with Node.js.
-
-### Setup
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/Vicopem01/clipboard-manager.git
-   cd clipboard-manager
-   ```
-2. Install dependencies:
-
-   ```javascript
-   npm install
-   ```
-
-3. Start the application:
-   ```javascript
-   npm start
-   ```
-4. Build the application (optional):
-   ```javascript
-   npm run build
-   ```
+- macOS 10.14 (Mojave) or later
+- 64-bit processor
 
 ## Usage
 
 1. Menu Bar Access: Click the clipboard icon in the menu bar to view your clipboard history.
 2. Keyboard Shortcut: Press ⌃V (Control+V) to toggle the clipboard history modal.
 3. Copy Items: Click any item in the history to copy it back to the clipboard.
-4. Keyboard Navigation: Use arrow keys to navigate the history and Enter to select an item.
-
-## Development
-
-File Structure
-
-- `src/main.js`: Main process logic, including tray creation, clipboard monitoring, and modal management.
-- `src/renderer.js`: Renderer process logic for the clipboard history modal.
-- `src/preload.js`: Preload script for secure communication between the main and renderer processes.
-- `src/modal.html`: HTML structure for the clipboard history modal.
-- `src/modal.css`: Styles for the clipboard history modal.
-
-## Scripts
-
-- Start the app: `npm start`
-- Build the app: `npm run build`
+4. Drag Items: Drag any text item directly to where you need it without copying first.
+5. Clear History: Click the × button in the header to clear your clipboard history.
+6. Keyboard Navigation: Use arrow keys to navigate the history and Enter to select an item.
+7. Move Modal: Drag the "Clipboard History" header to reposition the modal window.
 
 ## Contributing
 
@@ -74,4 +49,4 @@ Contributions are welcome! Feel free to open issues or submit pull requests to i
 
 ## Credits
 
-Created by [Vicopem01](https://github.com/Vicopem01).
+Created by [Victor](https://github.com/Vicopem01).

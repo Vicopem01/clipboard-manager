@@ -1,16 +1,38 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>Clipboard History</title>
-    <!-- Recommended security practice -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
-    <link rel="stylesheet" href="modal.css">
-</head>
-<body>
-    <div id="history-list">
+    <!-- Updated security policy to allow drag-and-drop operations -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'"
+    />
+    <link rel="stylesheet" href="modal.css" />
+    <style>
+      /* Use webkit-app-region for native OS window dragging */
+      .modal-header {
+        -webkit-app-region: drag;
+      }
+      /* Make buttons not draggable within the draggable region */
+      .modal-header button {
+        -webkit-app-region: no-drag;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="modal-container">
+      <div class="modal-header">
+        <span>Clipboard History</span>
+        <button id="clear-history" class="clear-button" title="Clear History">×</button>
+      </div>
+      <div id="history-list">
         <!-- History items will be loaded here -->
+      </div>
+      <div class="modal-footer">
+        <span>Made by <a href="https://github.com/Vicopem01" class="author-link" target="_blank">Victor</a></span>
+      </div>
     </div>
     <script src="modal.js"></script>
-</body>
-</html> 
+  </body>
+</html>

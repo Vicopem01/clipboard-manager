@@ -28,7 +28,7 @@ if (!clipsContainer) {
 
 // Function to render clipboard items in the popup window
 function renderClips() {
-  console.log('[Renderer] renderClips called. History length:', clipHistory.length);
+  // console.log('[Renderer] renderClips called. History length:', clipHistory.length);
 
   // Add another check for clipsContainer just before using it
   if (!clipsContainer) {
@@ -39,7 +39,7 @@ function renderClips() {
   clipsContainer.innerHTML = "";
   
   if (clipHistory.length === 0) {
-    console.log('[Renderer] History is empty, showing empty message.');
+    // console.log('[Renderer] History is empty, showing empty message.');
     const emptyMessage = document.createElement("div");
     emptyMessage.style.cssText = `
       padding: 12px;
@@ -52,9 +52,9 @@ function renderClips() {
     return;
   }
   
-  console.log('[Renderer] Rendering history items:', clipHistory);
+  // console.log('[Renderer] Rendering history items:', clipHistory);
   clipHistory.forEach((clip, index) => {
-    console.log(`[Renderer] Processing item ${index}: "${String(clip).substring(0, 30)}..."`);
+    // console.log(`[Renderer] Processing item ${index}: "${String(clip).substring(0, 30)}..."`);
     const clipElement = document.createElement("div");
     clipElement.className = "clip-item";
     
@@ -93,13 +93,13 @@ function renderClips() {
     };
     
     clipsContainer.appendChild(clipElement);
-    console.log(`[Renderer] Appended item ${index} to clipsContainer.`);
+    // console.log(`[Renderer] Appended item ${index} to clipsContainer.`);
   });
 }
 
 // Listen for clipboard updates from the main process
 ipcRenderer.on('update-clipboard', (event, newHistory) => {
-  console.log('[Renderer] Received update-clipboard event with history:', newHistory);
+  // console.log('[Renderer] Received update-clipboard event with history:', newHistory);
   clipHistory = newHistory;
   renderClips();
 });

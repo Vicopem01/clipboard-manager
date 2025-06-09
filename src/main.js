@@ -194,7 +194,7 @@ function createTray() {
   }
 }
 
-// Function to show modal at a specific position (reused for shortcut and tray click)
+// Function to show modal at a specific position (for tray clicks)
 function showModalAtPosition(x, y) {
   if (!modalWindow) {
     console.error("Modal window not initialized!");
@@ -243,7 +243,67 @@ function showModalAtPosition(x, y) {
     height: modalBounds.height,
   });
   modalWindow.show();
-  modalWindow.focus(); // Focus the window
+}
+
+// Function to show modal near cursor position (for keyboard shortcuts)
+function showModalAtCursor() {
+  if (!modalWindow) {
+    console.error("Modal window not initialized!");
+    return;
+  }
+
+  if (modalWindow.isVisible()) {
+    modalWindow.hide();
+    return;
+  }
+
+  // Get cursor position
+  const cursorPoint = screen.getCursorScreenPoint();
+  const modalBounds = modalWindow.getBounds();
+
+  // Get the display where the cursor is currently located
+  const currentDisplay = screen.getDisplayNearestPoint(cursorPoint);
+  const displayBounds = currentDisplay.workArea;
+
+  // Position close to cursor like Mac emoji picker - near cursor horizontally and vertically
+  let modalX = cursorPoint.x - (modalBounds.width / 2); // Center horizontally on cursor
+  let modalY = cursorPoint.y + 20; // Small offset below cursor
+
+  // Ensure the modal stays within the current screen bounds horizontally
+  if (modalX + modalBounds.width > displayBounds.x + displayBounds.width) {
+    modalX = displayBounds.x + displayBounds.width - modalBounds.width - 10;
+  }
+  if (modalX < displayBounds.x) {
+    modalX = displayBounds.x + 10;
+  }
+
+  // Ensure the modal stays within the current screen bounds vertically
+  if (modalY + modalBounds.height > displayBounds.y + displayBounds.height) {
+    // If there's no room below cursor, show above it
+    modalY = cursorPoint.y - modalBounds.height - 20;
+    
+    // If still doesn't fit above, position it at the bottom of the screen
+    if (modalY < displayBounds.y) {
+      modalY = displayBounds.y + displayBounds.height - modalBounds.height - 10;
+    }
+  }
+  
+  // Ensure it doesn't go above the screen
+  if (modalY < displayBounds.y) {
+    modalY = displayBounds.y + 10;
+  }
+
+  // Send the current history to the modal BEFORE showing
+  modalWindow.webContents.send("show-history", clipboardHistory);
+
+  // Set position and show
+  modalWindow.setBounds({
+    x: Math.round(modalX),
+    y: Math.round(modalY),
+    width: modalBounds.width,
+    height: modalBounds.height,
+  });
+  modalWindow.show();
 }
 
 // Monitor clipboard for changes
@@ -388,9 +448,8 @@ function initializeApp() {
     const ret = globalShortcut.register("Control+V", () => {
       // console.log("Control+V is pressed");
 
-      // Get cursor position and show modal at that position
-      const { x, y } = screen.getCursorScreenPoint();
-      showModalAtPosition(x, y);
+      // Show modal near cursor position on the current screen
+      showModalAtCursor();
     });
 
     if (!ret) {
@@ -405,6 +464,8 @@ function initializeApp() {
 
 // Hide dock icon for a proper menu bar app
 app.dock?.hide();
+// Set app to be an accessory app (macOS specific)
+app.setActivationPolicy('accessory');
 
 // App event handlers
 app.whenReady().then(() => {

@@ -12,3 +12,6 @@ Thumbs.db
 
 # Linux
 .directory
+
+# macOS
+*.DS_Store

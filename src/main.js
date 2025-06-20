@@ -88,22 +88,22 @@ function createModalWindow() {
     // Make the window movable (draggable)
     movable: true,
   });
-  
+
   // Enable BrowserWindow dragging for frameless window
   modalWindow.setMovable(true);
 
   // Set window to be movable but stay on top
   modalWindow.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-  
+
   // Enable drag events from modal to other applications
   modalWindow.setContentProtection(false);
-  
+
   // Add custom shadow using CSS in the renderer
-  
+
   modalWindow.loadFile(path.join(__dirname, "modal.html"));
 
   // Handle blur event in the main process too, respecting drag state
-  modalWindow.on('blur', () => {
+  modalWindow.on("blur", () => {
     if (!dragInProgress && modalWindow && modalWindow.isVisible()) {
       // Add a short delay to allow for drag operations to register
       setTimeout(() => {
@@ -151,12 +151,12 @@ function createTray() {
     }
 
     tray.setToolTip("Clipboard Manager");
-    
+
     // Instead of setting a context menu, handle click events
-    tray.on('click', (event, bounds) => {
+    tray.on("click", (event, bounds) => {
       showModalAtPosition(bounds.x, bounds.y);
     });
-    
+
     // Create right-click menu for additional options
     const contextMenu = Menu.buildFromTemplate([
       {
@@ -175,9 +175,9 @@ function createTray() {
         click: () => app.quit(),
       },
     ]);
-    
+
     // Set the right-click menu
-    tray.on('right-click', () => {
+    tray.on("right-click", () => {
       tray.popUpContextMenu(contextMenu);
     });
 
@@ -209,7 +209,7 @@ function showModalAtPosition(x, y) {
   const modalBounds = modalWindow.getBounds();
 
   // Position the modal below the tray icon for tray clicks
-  let modalX = x - (modalBounds.width / 2);
+  let modalX = x - modalBounds.width / 2;
   let modalY = y;
 
   // Ensure the modal appears fully on the screen
@@ -219,10 +219,7 @@ function showModalAtPosition(x, y) {
   if (modalX + modalBounds.width > displayBounds.x + displayBounds.width) {
     modalX = displayBounds.x + displayBounds.width - modalBounds.width;
   }
-  if (
-    modalY + modalBounds.height >
-    displayBounds.y + displayBounds.height
-  ) {
+  if (modalY + modalBounds.height > displayBounds.y + displayBounds.height) {
     modalY = displayBounds.y + displayBounds.height - modalBounds.height;
   }
   if (modalX < displayBounds.x) {
@@ -246,65 +243,65 @@ function showModalAtPosition(x, y) {
 }
 
 // Function to show modal near cursor position (for keyboard shortcuts)
-function showModalAtCursor() {
-  if (!modalWindow) {
-    console.error("Modal window not initialized!");
-    return;
-  }
+// function showModalAtCursor() {
+//   if (!modalWindow) {
+//     console.error("Modal window not initialized!");
+//     return;
+//   }
 
-  if (modalWindow.isVisible()) {
-    modalWindow.hide();
-    return;
-  }
+//   if (modalWindow.isVisible()) {
+//     modalWindow.hide();
+//     return;
+//   }
 
-  // Get cursor position
-  const cursorPoint = screen.getCursorScreenPoint();
-  const modalBounds = modalWindow.getBounds();
+//   // Get cursor position
+//   const cursorPoint = screen.getCursorScreenPoint();
+//   const modalBounds = modalWindow.getBounds();
 
-  // Get the display where the cursor is currently located
-  const currentDisplay = screen.getDisplayNearestPoint(cursorPoint);
-  const displayBounds = currentDisplay.workArea;
+//   // Get the display where the cursor is currently located
+//   const currentDisplay = screen.getDisplayNearestPoint(cursorPoint);
+//   const displayBounds = currentDisplay.workArea;
 
-  // Position close to cursor like Mac emoji picker - near cursor horizontally and vertically
-  let modalX = cursorPoint.x - (modalBounds.width / 2); // Center horizontally on cursor
-  let modalY = cursorPoint.y + 20; // Small offset below cursor
+//   // Position close to cursor like Mac emoji picker - near cursor horizontally and vertically
+//   let modalX = cursorPoint.x - (modalBounds.width / 2); // Center horizontally on cursor
+//   let modalY = cursorPoint.y + 20; // Small offset below cursor
 
-  // Ensure the modal stays within the current screen bounds horizontally
-  if (modalX + modalBounds.width > displayBounds.x + displayBounds.width) {
-    modalX = displayBounds.x + displayBounds.width - modalBounds.width - 10;
-  }
-  if (modalX < displayBounds.x) {
-    modalX = displayBounds.x + 10;
-  }
+//   // Ensure the modal stays within the current screen bounds horizontally
+//   if (modalX + modalBounds.width > displayBounds.x + displayBounds.width) {
+//     modalX = displayBounds.x + displayBounds.width - modalBounds.width - 10;
+//   }
+//   if (modalX < displayBounds.x) {
+//     modalX = displayBounds.x + 10;
+//   }
 
-  // Ensure the modal stays within the current screen bounds vertically
-  if (modalY + modalBounds.height > displayBounds.y + displayBounds.height) {
-    // If there's no room below cursor, show above it
-    modalY = cursorPoint.y - modalBounds.height - 20;
-    
-    // If still doesn't fit above, position it at the bottom of the screen
-    if (modalY < displayBounds.y) {
-      modalY = displayBounds.y + displayBounds.height - modalBounds.height - 10;
-    }
-  }
-  
-  // Ensure it doesn't go above the screen
-  if (modalY < displayBounds.y) {
-    modalY = displayBounds.y + 10;
-  }
+//   // Ensure the modal stays within the current screen bounds vertically
+//   if (modalY + modalBounds.height > displayBounds.y + displayBounds.height) {
+//     // If there's no room below cursor, show above it
+//     modalY = cursorPoint.y - modalBounds.height - 20;
 
-  // Send the current history to the modal BEFORE showing
-  modalWindow.webContents.send("show-history", clipboardHistory);
+//     // If still doesn't fit above, position it at the bottom of the screen
+//     if (modalY < displayBounds.y) {
+//       modalY = displayBounds.y + displayBounds.height - modalBounds.height - 10;
+//     }
+//   }
 
-  // Set position and show
-  modalWindow.setBounds({
-    x: Math.round(modalX),
-    y: Math.round(modalY),
-    width: modalBounds.width,
-    height: modalBounds.height,
-  });
-  modalWindow.show();
-}
+//   // Ensure it doesn't go above the screen
+//   if (modalY < displayBounds.y) {
+//     modalY = displayBounds.y + 10;
+//   }
+
+//   // Send the current history to the modal BEFORE showing
+//   modalWindow.webContents.send("show-history", clipboardHistory);
+
+//   // Set position and show
+//   modalWindow.setBounds({
+//     x: Math.round(modalX),
+//     y: Math.round(modalY),
+//     width: modalBounds.width,
+//     height: modalBounds.height,
+//   });
+//   modalWindow.show();
+// }
 
 // Monitor clipboard for changes
 function monitorClipboard() {
@@ -425,7 +422,7 @@ function monitorClipboard() {
 
         // Send updated history to modal if it's visible
         if (modalWindow && modalWindow.isVisible()) {
-            modalWindow.webContents.send('show-history', clipboardHistory);
+          modalWindow.webContents.send("show-history", clipboardHistory);
         }
       }
     } catch (error) {
@@ -448,8 +445,9 @@ function initializeApp() {
     const ret = globalShortcut.register("Control+V", () => {
       // console.log("Control+V is pressed");
 
-      // Show modal near cursor position on the current screen
-      showModalAtCursor();
+      // Show modal at the tray's position
+      const bounds = tray.getBounds();
+      showModalAtPosition(bounds.x, bounds.y);
     });
 
     if (!ret) {
@@ -465,7 +463,7 @@ function initializeApp() {
 // Hide dock icon for a proper menu bar app
 app.dock?.hide();
 // Set app to be an accessory app (macOS specific)
-app.setActivationPolicy('accessory');
+app.setActivationPolicy("accessory");
 
 // App event handlers
 app.whenReady().then(() => {
@@ -552,7 +550,7 @@ let dragInProgress = false;
 ipcMain.on("drag-started", () => {
   // console.log("Main process received drag-started event");
   dragInProgress = true;
-  
+
   // Keep the window visible during drag operations
   if (modalWindow) {
     // Ensure the window stays visible
@@ -563,11 +561,11 @@ ipcMain.on("drag-started", () => {
 ipcMain.on("drag-ended", (event, dropSuccessful) => {
   // console.log("Main process received drag-ended event", dropSuccessful ? "with successful drop" : "");
   dragInProgress = false;
-  
+
   // Reset window settings after drag
   if (modalWindow) {
     modalWindow.setAlwaysOnTop(true);
-    
+
     // If drop was successful, hide the modal
     if (dropSuccessful) {
       modalWindow.hide();
@@ -578,7 +576,7 @@ ipcMain.on("drag-ended", (event, dropSuccessful) => {
 // Handle opening external links
 ipcMain.on("open-external-link", (event, url) => {
   // console.log("Opening external link:", url);
-  shell.openExternal(url).catch(err => {
+  shell.openExternal(url).catch((err) => {
     console.error("Failed to open external link:", err);
   });
 });
@@ -587,12 +585,12 @@ ipcMain.on("open-external-link", (event, url) => {
 ipcMain.on("clear-history", (event) => {
   // Clear the history array
   clipboardHistory = [];
-  
+
   // Update the store
   if (store) {
     store.set("history", []);
   }
-  
+
   // Update the modal if it's visible
   if (modalWindow && modalWindow.isVisible()) {
     modalWindow.webContents.send("show-history", clipboardHistory);
